@@ -4,7 +4,7 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
     
-from sconn.protocol.constants import DEFAULT_SETTINGS
+from ..protocol.constants import DEFAULT_SETTINGS
 
 
 SETTINGS_YAML_PATH = "server_settings.yaml"
