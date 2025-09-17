@@ -3,7 +3,7 @@ from multiprocessing import Process
 from threading import Thread
 from os.path import exists
 from functools import partial
-from .setting_parser import SETTINGS_YAML_PATH, create_default_settings_yaml, get_setting
+from ..setting_parser import SERVER_CONFIG_PATH, create_default_config, get_setting
 from .handlers.server_client_handler import ServerClientHandler
 from ..protocol.constants import ConnectionTypes
 
@@ -21,8 +21,8 @@ class Server:
         :type handler_exit_function: partial | None, optional
         """
 
-        if not exists(SETTINGS_YAML_PATH):
-            create_default_settings_yaml()
+        if not exists(SERVER_CONFIG_PATH):
+            create_default_config()
             
         self.skt = socket(AF_INET, SOCK_STREAM)
         self.skt.bind(('0.0.0.0', get_setting("port")))

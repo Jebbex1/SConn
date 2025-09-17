@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from socket import socket
 from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_SERVER
-from ..setting_parser import get_setting
+from ...setting_parser import get_setting
 
 
 def tls_wrap_socket(client_socket: socket) -> SSLSocket:
