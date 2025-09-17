@@ -1,8 +1,5 @@
 from socket import socket, AF_INET, SOCK_STREAM
-from multiprocessing import Process
-from threading import Thread
 from os.path import exists
-from functools import partial
 from .handlers.client_abstract_handler import ClientAbstractHandler
 from .handlers.client_sc_model_handler import ClientSCModelHandler
 from ..utils.setting_parser import CLIENT_CONFIG_PATH, create_default_config, get_setting

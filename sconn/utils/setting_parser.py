@@ -3,8 +3,6 @@ try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader, Dumper
-    
-from ..protocol.constants import DEFAULT_SETTINGS
 
 
 SERVER_CONFIG_PATH = "sconn_server_config_path.yaml"
