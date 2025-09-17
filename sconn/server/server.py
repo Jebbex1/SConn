@@ -3,13 +3,13 @@ from multiprocessing import Process
 from threading import Thread
 from os.path import exists
 from functools import partial
-from ..setting_parser import SERVER_CONFIG_PATH, create_default_config, get_setting
-from .handlers.server_client_handler import ServerClientHandler
+from .handlers.server_sc_model_handler import ServerSCModelHandler
+from ..utils.setting_parser import SERVER_CONFIG_PATH, create_default_config, get_setting
 from ..protocol.constants import ConnectionTypes
 
 
 class Server:
-    def __init__(self, connection_type: int, 
+    def __init__(self, connection_type: ConnectionTypes, 
                  handler_exit_function: partial | None = None) -> None:
         """Initializes the Server object.
 
@@ -22,7 +22,7 @@ class Server:
         """
 
         if not exists(SERVER_CONFIG_PATH):
-            create_default_config()
+            create_default_config(server_side=True)
             
         self.skt = socket(AF_INET, SOCK_STREAM)
         self.skt.bind(('0.0.0.0', get_setting("port")))
@@ -31,7 +31,7 @@ class Server:
         
         match connection_type:
             case _:
-                self.handler_class = ServerClientHandler
+                self.handler_class = ServerSCModelHandler
         
         self.listening_thread = Thread(target=self._start_listening)
                 
@@ -39,11 +39,11 @@ class Server:
         self.skt.listen()
         try:
             while True:
-                client_skt, addr = self.skt.accept()
+                client_socket, addr = self.skt.accept()
                 if self.handler_exit_function is not None:
-                    subprocess = Process(target=self.handler_class, args=(client_skt, self.handler_exit_function))
+                    subprocess = Process(target=self.handler_class, args=(client_socket, self.handler_exit_function))
                 else:
-                    subprocess = Process(target=self.handler_class, args=(client_skt,))
+                    subprocess = Process(target=self.handler_class, args=(client_socket,))
                 subprocess.start()
         except OSError:  # self.stop() was called
             return
