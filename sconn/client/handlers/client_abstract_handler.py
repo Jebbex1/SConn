@@ -8,7 +8,7 @@ def tls_wrap_client_side_socket(skt: socket) -> SSLSocket:
     tls_context = SSLContext(PROTOCOL_TLS_CLIENT)
     tls_context.load_verify_locations(get_setting("ca_certificate_path"))
     tls_context.minimum_version = TLSVersion.TLSv1_3
-    return tls_context.wrap_socket(skt)
+    return tls_context.wrap_socket(skt, server_hostname=get_setting("server_hostname"))
 
 
 class ClientAbstractHandler(ABC):

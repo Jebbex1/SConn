@@ -9,23 +9,24 @@ SERVER_CONFIG_PATH = "sconn_server_config_path.yaml"
 CLIENT_CONFIG_PATH = "sconn_client_config_path.yaml"
 
 SERVER_DEFAULT_CONFIG = \
-    """
-    # tls certificates to load as own
-    certificate_key_path: server_certificate_key.pem
-    certificate_path: server_certificate.pem
+"""
+# tls certificates to load as own
+certificate_key_path: server_certificate_key.pem
+certificate_path: server_certificate.pem
 
-    # protocol
-    port: 8374
-    """
+# protocol
+port: 8374
+"""
 
 CLIENT_DEFAULT_CONFIG = \
-    """
-    # trusted CA certificate path
-    ca_certificate_path: ca_cert.pem
-    
-    # protocol
-    port: 8374
-    """
+"""
+# trusted CA certificate path
+ca_certificate_path: ca_cert.pem
+
+# protocol
+port: 8374
+server_hostname: 127.0.0.1
+"""
 
 
 def get_setting(setting_name: str, server_side: bool = False) -> str:

@@ -13,9 +13,9 @@ class Client:
         self.handler: ClientAbstractHandler
         self.connection_type = connection_type
         
-    def connect(self, server_address: str) -> None:
+    def connect(self) -> None:
         skt = socket(AF_INET, SOCK_STREAM)
-        skt.connect((server_address, get_setting("port")))
+        skt.connect((get_setting("server_hostname"), get_setting("port")))
         match self.connection_type:
             case _:
                 self.handler = ClientSCModelHandler(skt)
@@ -28,4 +28,3 @@ class Client:
     
     def recv(self, buffer_len: int = 1024, flags: int = 0) -> bytes:
         return self.handler.recv(buffer_len, flags)
-   

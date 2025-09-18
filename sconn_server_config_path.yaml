@@ -1,0 +1,8 @@
+# USED FOR TESTING!
+
+# tls certificates to load as own
+certificate_key_path: tests/certs/server_certificate_key.pem
+certificate_path: tests/certs/server_certificate.pem
+
+# protocol
+port: 8374

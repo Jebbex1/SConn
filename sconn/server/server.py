@@ -25,7 +25,7 @@ class Server:
             create_default_config(server_side=True)
             
         self.skt = socket(AF_INET, SOCK_STREAM)
-        self.skt.bind(('0.0.0.0', get_setting("port")))
+        self.skt.bind(('0.0.0.0', get_setting("port", server_side=True)))
         
         self.handler_exit_function = handler_exit_function
         
