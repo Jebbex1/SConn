@@ -11,10 +11,10 @@ from ..protocol.constants import ConnectionTypes
 class Server:
     def __init__(self, connection_type: ConnectionTypes, 
                  handler_exit_function: partial | None = None) -> None:
-        """Initializes the Server object.
+        """Initializes the Server object, and creates a default config file if the path for it is empty.
 
-        :param connection_type: An ConnectionTypes enum selection, to specify the model of the connection.
-        :type connection_type: int
+        :param connection_type: A ConnectionTypes enum selection, to specify the model of the connection.
+        :type connection_type: ConnectionTypes
         :param handler_exit_function: If the handler interacts with the client directly after the initial handshake 
          (e.g. a Server-Client Model), we need to route the process to the function that does that, this parameter is that function. 
          Defaults to None.
@@ -36,6 +36,8 @@ class Server:
         self.listening_thread = Thread(target=self._start_listening)
                 
     def _start_listening(self) -> None:
+        """Initiates the listening process of the server, separates each client into a process of its own.
+        """
         self.skt.listen()
         try:
             while True:
@@ -50,8 +52,12 @@ class Server:
     
     
     def start(self) -> None:
+        """Starts the listening thread.
+        """
         self.listening_thread.start()
     
     
     def stop(self) -> None:
+        """Effectively stops the server by closing its listening socket, this interrupts the listening process, and all the client processes.
+        """
         self.skt.close()
