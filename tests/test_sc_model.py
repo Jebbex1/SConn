@@ -6,7 +6,7 @@ from ssl import SSLSocket
 from sconn.utils.config_interface import ServerConfig
 
 
-def reply_with_sent_once(skt: SSLSocket, /) -> None:
+def reply_with_sent_once(skt: SSLSocket, config: ServerConfig) -> None:
     skt.send(skt.recv())
 
 
