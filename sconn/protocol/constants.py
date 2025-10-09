@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-class ConnectionTypes(IntEnum):
+class ConnectionModels(IntEnum):
     """An IntEnum that represents all the connection types.
     """
     UNDEFINED_MODEL      = 0  # used for when a client requests an undefined model
@@ -32,12 +32,8 @@ CODES: dict[str, tuple[str, list[str]]] = {
             ]),
     
     "051": ("Server Hello",
-            [
-                # "length-field-size",
-            ]),
-    "052": ("Model Supported Transferring",
             []),
-    "053": ("Transfer Complete, Initiate Model Handshake",
+    "052": ("Model Supported, Initiate Handshake",
             []),
 
 

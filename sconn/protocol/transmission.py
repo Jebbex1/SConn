@@ -13,9 +13,7 @@ def recv_packet(skt: socket.socket, config: BaseConfig) -> PacketInfo:
     :param skt: the socket interface that we can use to communicate
     :return: the received packet
     """
-    print(skt.getblocking())
     length = skt.recv(LFS)  # receive packet length
-    print(f"-{length}-")
     if not length.decode().isnumeric():
         raise TransmissionProtocolError(f"Socket at address {skt.getsockname()[0]}:{str(skt.getsockname()[1])} sent a "
                                         f"packet that doesn't follow the transmission protocol")

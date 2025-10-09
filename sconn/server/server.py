@@ -4,9 +4,8 @@ from threading import Thread
 from os.path import exists
 from functools import partial
 from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_SERVER
-from .handlers.server_sc_model_handler import ServerSCModelHandler
 from ..utils.config_interface import ServerConfig
-from ..protocol.constants import ConnectionTypes
+from ..protocol.constants import ConnectionModels
 from ..protocol.transmission import recv_packet, send_packet
 from ..protocol.packet_builder import build_packet
 from ..protocol.communication_errors import PacketContentsError
@@ -22,7 +21,7 @@ def tls_wrap_client_connection(client_socket: socket, config: ServerConfig) -> S
     return tls_context.wrap_socket(client_socket, server_side=True)
 
 
-def get_requested_model(client_socket: SSLSocket, config: ServerConfig) -> ConnectionTypes:
+def get_requested_model(client_socket: SSLSocket, config: ServerConfig) -> ConnectionModels:
     packet = recv_packet(client_socket, config)
     packet.verify_code("001")
     
@@ -31,10 +30,10 @@ def get_requested_model(client_socket: SSLSocket, config: ServerConfig) -> Conne
     except ValueError as e:
             raise PacketContentsError(f"Packet header types are invalid: {e}")
     
-    if requested_model in ConnectionTypes:
-        return ConnectionTypes(requested_model)
+    if requested_model in ConnectionModels:
+        return ConnectionModels(requested_model)
     else:
-        return ConnectionTypes.UNDEFINED_MODEL
+        return ConnectionModels.UNDEFINED_MODEL
 
 
 def send_unsupported_model(client_socket: SSLSocket) -> None:
@@ -68,6 +67,7 @@ class Server:
         if self.config.supports_sc_model():
             assert self.handler_exit_function is not None, "Must define handler exit function if the Server-Client model is supported."
         
+        
     def _start_listening(self) -> None:
         """Initiates the listening process of the server, separates each client into a process of its own.
         """
@@ -84,8 +84,9 @@ class Server:
     def patch_client_to_specialized_handler(self, client_socket: socket) -> None:
         client_socket = tls_wrap_client_connection(client_socket, self.config)
         requested_model = get_requested_model(client_socket, self.config)
+        send_packet(client_socket, build_packet("051"))  # reply with Server Hello regardless of the model
         match requested_model:
-            case ConnectionTypes.SERVER_CLIENT if self.config.supports_sc_model():
+            case ConnectionModels.SERVER_CLIENT if self.config.supports_sc_model():
                 send_packet(client_socket, build_packet("052"))
                 subprocess = Process(target=self.handler_exit_function, args=(client_socket, self.config))
                 subprocess.start()

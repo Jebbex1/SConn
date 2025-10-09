@@ -1,35 +1,20 @@
 from abc import ABC, abstractmethod
-from socket import socket
-from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_CLIENT
+from ssl import SSLSocket
 from ...utils.config_interface import ClientConfig
-
-
-def tls_wrap_client_side_socket(skt: socket, config_yaml: ClientConfig) -> SSLSocket:
-    """Wraps the client-side socket with TLS 1.3
-
-    :param skt: he socket to wrap.
-    :type skt: socket
-    :return: The TLS 1.3 wrapped socket.
-    :rtype: SSLSocket
-    """
-    tls_context = SSLContext(PROTOCOL_TLS_CLIENT)
-    tls_context.load_verify_locations(config_yaml.get_ca_certificate_path())
-    tls_context.minimum_version = TLSVersion.TLSv1_3
-    return tls_context.wrap_socket(skt, server_hostname=config_yaml.get_server_hostname())
 
 
 class ClientAbstractHandler(ABC):
     """An abstract class that is initialized with every connection with inheritance, is in charge of wrapping the connection with TLS 1.3.
     """
-    def __init__(self, skt: socket, config_path: str) -> None:
+    def __init__(self, skt: SSLSocket, config: ClientConfig) -> None:
         """Initializes the base ClientAbstractHandler instance, and wraps the connection of `skt` with TLS 1.3
 
         :param skt: The socket to wrap
         :type skt: socket
         """
         super().__init__()
-        self.config_yaml = ClientConfig(config_path)
-        self.socket = tls_wrap_client_side_socket(skt, self.config_yaml)
+        self.config = config
+        self.socket = skt
 
     @abstractmethod
     def send(self, data: bytes) -> None:

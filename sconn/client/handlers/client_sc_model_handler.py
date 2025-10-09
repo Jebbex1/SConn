@@ -1,24 +1,13 @@
-from socket import socket
+from ssl import SSLSocket
 from .client_abstract_handler import ClientAbstractHandler
+from ...utils.config_interface import ClientConfig
 
 
 class ClientSCModelHandler(ClientAbstractHandler):
-    """The client-side class to manage the simplest connection model; the Server-Client model. Extends `ClientAbstractHandler`.
-    """
-    def __init__(self, skt: socket, config_path: str) -> None:
-        """Initializes the instance of this class. Firstly wraps the connection with TLS 1.3 via ClientAbstractHandler's constructor
-
-        :param skt: The socket to wrap and send data through. This socket is connected to the server.
-        :type skt: socket
-        """
-        super().__init__(skt, config_path)
+    def __init__(self, skt: SSLSocket, config: ClientConfig) -> None:
+        super().__init__(skt, config)
     
     def send(self, data: bytes) -> None:
-        """Sends data to the server.
-
-        :param data: The data to send.
-        :type data: bytes
-        """
         self.socket.send(data)
     
     def recv(self, buffer_len: int = 1024, flags: int = 0) -> bytes:

@@ -8,7 +8,7 @@ HEADER_PATTERN = r"([\w-]+:[\x20-\x7E]+\x1D\x0D)"
 # a regex that matches any correctly structured packets (does not check packet parameters, only its structure)
 PACKET_PATTERN = (
     r"^("  # starts with 
-    r"(\d{3}:[\w\x20]+\x1D\x0D)"  # code and description
+    r"(\d{3}:[\w\x20,]+\x1D\x0D)"  # code and description
     fr"{HEADER_PATTERN}*"  # headers (zero or more)
     r")"
     

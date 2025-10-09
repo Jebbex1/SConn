@@ -1,9 +1,9 @@
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR
 from os.path import exists
 from .handlers.client_abstract_handler import ClientAbstractHandler
 from .handlers.client_sc_model_handler import ClientSCModelHandler
 from ..utils.config_interface import ClientConfig
-from ..protocol.constants import ConnectionTypes
+from ..protocol.constants import ConnectionModels
 from ..protocol.transmission import send_packet, recv_packet
 from ..protocol.packet_builder import build_packet
 from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_CLIENT
@@ -17,43 +17,46 @@ def tls_wrap_connection(skt: socket, config: ClientConfig) -> SSLSocket:
 
 
 class Client:
-    def __init__(self, connection_type: ConnectionTypes, 
+    def __init__(self, connection_type: ConnectionModels, 
                  config_path: str = "sconn_client_config.yaml") -> None:
-        """Initializes the Client object, and creates a default config file if the path for it is empty.
-
-        :param connection_type: A ConnectionTypes enum selection, to specify the model of the connection.
-        :type connection_type: ConnectionTypes
-        """
         self.config = ClientConfig(config_path)
         
         self.handler: ClientAbstractHandler
+        assert connection_type is not ConnectionModels.UNDEFINED_MODEL, "You must choose a defined model."
         self.connection_type = connection_type
         
+        
     def connect(self) -> None:
-        """Connects the client to a server.
-        """
         skt = socket(AF_INET, SOCK_STREAM)
         skt.connect((self.config.get_server_hostname(), 
                      self.config.get_port()))
         skt = tls_wrap_connection(skt, self.config)
         
-        model_request = build_packet("001", {"requested-model": str(int(ConnectionTypes.SERVER_CLIENT))})
+        model_request = build_packet("001", {"requested-model": str(int(ConnectionModels.SERVER_CLIENT))})
         send_packet(skt, model_request)
         
-        # TODO: add further logic
-
+        server_hello = recv_packet(skt, self.config)
+        assert server_hello.code == "051", "Server did not respond to Client Hello with Server Hello."
+        
+        model_supported = recv_packet(skt, self.config)
+        assert model_supported.code == "052", "Server does not support the requested model."
+        
+        self.assign_specialized_handler(skt)
+        
+        
+    def assign_specialized_handler(self, skt: SSLSocket) -> None:
+        match self.connection_type:
+            case ConnectionModels.SERVER_CLIENT:
+                self.handler = ClientSCModelHandler(skt, self.config)
+            case _:
+                raise ValueError("The chosen connection model is not supported by the client.")
+        
 
     def disconnect(self) -> None:
-        """Effectively disconnects the client from the server, by closing its socket.
-        """
+        self.handler.socket.shutdown(SHUT_RDWR)
         self.handler.socket.close()
         
     def send(self, data: bytes) -> None:
-        """Sends data to the server by using the client-side handler's send() function.
-
-        :param data: The data to send.
-        :type data: bytes
-        """
         self.handler.send(data)
     
     def recv(self, buffer_len: int = 1024, flags: int = 0) -> bytes:
