@@ -6,7 +6,7 @@ from .server_abstract_handler import ServerAbstractHandler
 class ServerSCModelHandler(ServerAbstractHandler):
     """The server-side class to manage the simplest connection model; the Server-Client model. Extends `ServerAbstractHandler`.
     """
-    def __init__(self, skt: socket, exit_function: partial) -> None:
+    def __init__(self, skt: socket, config_path: str, exit_function: partial) -> None:
         """Initializes the instance of this class. Firstly wraps the connection with TLS 1.3 via ServerAbstractHandler's constructor
 
         :param skt: The socket to wrap and send data through. This socket is connected to a client.
@@ -16,7 +16,7 @@ class ServerSCModelHandler(ServerAbstractHandler):
          handler object of the connection
         :type exit_function: partial
         """
-        super().__init__(skt)
+        super().__init__(skt, config_path)
         self.exit_function = exit_function
         exit_function(handler=self)
     

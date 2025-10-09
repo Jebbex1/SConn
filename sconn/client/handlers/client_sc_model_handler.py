@@ -5,13 +5,13 @@ from .client_abstract_handler import ClientAbstractHandler
 class ClientSCModelHandler(ClientAbstractHandler):
     """The client-side class to manage the simplest connection model; the Server-Client model. Extends `ClientAbstractHandler`.
     """
-    def __init__(self, skt: socket) -> None:
+    def __init__(self, skt: socket, config_path: str) -> None:
         """Initializes the instance of this class. Firstly wraps the connection with TLS 1.3 via ClientAbstractHandler's constructor
 
         :param skt: The socket to wrap and send data through. This socket is connected to the server.
         :type skt: socket
         """
-        super().__init__(skt)
+        super().__init__(skt, config_path)
     
     def send(self, data: bytes) -> None:
         """Sends data to the server.

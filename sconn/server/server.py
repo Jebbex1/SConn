@@ -1,15 +1,50 @@
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR
 from multiprocessing import Process
 from threading import Thread
 from os.path import exists
 from functools import partial
+from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_SERVER
 from .handlers.server_sc_model_handler import ServerSCModelHandler
-from ..utils.setting_parser import SERVER_CONFIG_PATH, create_default_config, get_setting
+from ..utils.config_interface import ServerConfig
 from ..protocol.constants import ConnectionTypes
+from ..protocol.transmission import recv_packet, send_packet
+from ..protocol.packet_builder import build_packet
+from ..protocol.communication_errors import PacketContentsError
+from ..utils.connection_utils import safe_disconnect
+
+
+def tls_wrap_client_connection(client_socket: socket, config: ServerConfig) -> SSLSocket:
+    tls_context = SSLContext(PROTOCOL_TLS_SERVER)
+    certfile_path, keyfile_path = config.get_tls_certificate_paths()
+    tls_context.load_cert_chain(certfile=certfile_path, 
+                                keyfile =keyfile_path)
+    tls_context.minimum_version = TLSVersion.TLSv1_3
+    return tls_context.wrap_socket(client_socket, server_side=True)
+
+
+def get_requested_model(client_socket: SSLSocket, config: ServerConfig) -> ConnectionTypes:
+    packet = recv_packet(client_socket, config)
+    packet.verify_code("001")
+    
+    try:
+        requested_model = int(packet.headers["requested-model"])
+    except ValueError as e:
+            raise PacketContentsError(f"Packet header types are invalid: {e}")
+    
+    if requested_model in ConnectionTypes:
+        return ConnectionTypes(requested_model)
+    else:
+        return ConnectionTypes.UNDEFINED_MODEL
+
+
+def send_unsupported_model(client_socket: SSLSocket) -> None:
+    packet = build_packet("504")
+    send_packet(client_socket, packet)
 
 
 class Server:
-    def __init__(self, connection_type: ConnectionTypes, 
+    def __init__(self, 
+                 config_path: str = "sconn_server_config.yaml",
                  handler_exit_function: partial | None = None) -> None:
         """Initializes the Server object, and creates a default config file if the path for it is empty.
 
@@ -21,20 +56,18 @@ class Server:
         :type handler_exit_function: partial | None, optional
         """
 
-        if not exists(SERVER_CONFIG_PATH):
-            create_default_config(server_side=True)
+        self.config = ServerConfig(config_path)
             
         self.skt = socket(AF_INET, SOCK_STREAM)
-        self.skt.bind(('0.0.0.0', get_setting("port", server_side=True)))
+        self.skt.bind(('0.0.0.0', self.config.get_port()))
         
         self.handler_exit_function = handler_exit_function
-        
-        match connection_type:
-            case _:
-                self.handler_class = ServerSCModelHandler
-        
-        self.listening_thread = Thread(target=self._start_listening)
                 
+        self.listening_thread = Thread(target=self._start_listening)
+        
+        if self.config.supports_sc_model():
+            assert self.handler_exit_function is not None, "Must define handler exit function if the Server-Client model is supported."
+        
     def _start_listening(self) -> None:
         """Initiates the listening process of the server, separates each client into a process of its own.
         """
@@ -42,14 +75,26 @@ class Server:
         try:
             while True:
                 client_socket, addr = self.skt.accept()
-                if self.handler_exit_function is not None:
-                    subprocess = Process(target=self.handler_class, args=(client_socket, self.handler_exit_function))
-                else:
-                    subprocess = Process(target=self.handler_class, args=(client_socket,))
-                subprocess.start()
+                client_socket.setblocking(True)
+                self.patch_client_to_specialized_handler(client_socket)
         except OSError:  # self.stop() was called
             return
-    
+
+
+    def patch_client_to_specialized_handler(self, client_socket: socket) -> None:
+        client_socket = tls_wrap_client_connection(client_socket, self.config)
+        requested_model = get_requested_model(client_socket, self.config)
+        match requested_model:
+            case ConnectionTypes.SERVER_CLIENT if self.config.supports_sc_model():
+                send_packet(client_socket, build_packet("052"))
+                subprocess = Process(target=self.handler_exit_function, args=(client_socket, self.config))
+                subprocess.start()
+                return
+            case _:
+                send_unsupported_model(client_socket)
+                safe_disconnect(client_socket)
+                return
+
     
     def start(self) -> None:
         """Starts the listening thread.
@@ -60,4 +105,4 @@ class Server:
     def stop(self) -> None:
         """Effectively stops the server by closing its listening socket, this interrupts the listening process, and all the client processes.
         """
-        self.skt.close()
+        safe_disconnect(self.skt)

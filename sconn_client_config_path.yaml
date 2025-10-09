@@ -1,8 +1,0 @@
-# USED FOR TESTING!
-
-# trusted CA certificate path
-ca_certificate_path: tests/certs/ca_cert.pem
-
-# protocol
-port: 8374
-server_hostname: 127.0.0.1

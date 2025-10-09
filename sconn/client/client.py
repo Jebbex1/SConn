@@ -2,18 +2,29 @@ from socket import socket, AF_INET, SOCK_STREAM
 from os.path import exists
 from .handlers.client_abstract_handler import ClientAbstractHandler
 from .handlers.client_sc_model_handler import ClientSCModelHandler
-from ..utils.setting_parser import CLIENT_CONFIG_PATH, create_default_config, get_setting
+from ..utils.config_interface import ClientConfig
 from ..protocol.constants import ConnectionTypes
+from ..protocol.transmission import send_packet, recv_packet
+from ..protocol.packet_builder import build_packet
+from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_CLIENT
+
+
+def tls_wrap_connection(skt: socket, config: ClientConfig) -> SSLSocket:
+    tls_context = SSLContext(PROTOCOL_TLS_CLIENT)
+    tls_context.load_verify_locations(config.get_ca_certificate_path())
+    tls_context.minimum_version = TLSVersion.TLSv1_3
+    return tls_context.wrap_socket(skt, server_hostname=config.get_server_hostname())
+
 
 class Client:
-    def __init__(self, connection_type: ConnectionTypes) -> None:
+    def __init__(self, connection_type: ConnectionTypes, 
+                 config_path: str = "sconn_client_config.yaml") -> None:
         """Initializes the Client object, and creates a default config file if the path for it is empty.
 
         :param connection_type: A ConnectionTypes enum selection, to specify the model of the connection.
         :type connection_type: ConnectionTypes
         """
-        if not exists(CLIENT_CONFIG_PATH):
-            create_default_config()
+        self.config = ClientConfig(config_path)
         
         self.handler: ClientAbstractHandler
         self.connection_type = connection_type
@@ -22,11 +33,16 @@ class Client:
         """Connects the client to a server.
         """
         skt = socket(AF_INET, SOCK_STREAM)
-        skt.connect((get_setting("server_hostname"), get_setting("port")))
-        match self.connection_type:
-            case _:
-                self.handler = ClientSCModelHandler(skt)
-    
+        skt.connect((self.config.get_server_hostname(), 
+                     self.config.get_port()))
+        skt = tls_wrap_connection(skt, self.config)
+        
+        model_request = build_packet("001", {"requested-model": str(int(ConnectionTypes.SERVER_CLIENT))})
+        send_packet(skt, model_request)
+        
+        # TODO: add further logic
+
+
     def disconnect(self) -> None:
         """Effectively disconnects the client from the server, by closing its socket.
         """

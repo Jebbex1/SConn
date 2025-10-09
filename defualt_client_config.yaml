@@ -1,0 +1,12 @@
+# protocol
+port: 8374
+recv_buffer_size: 128000
+
+# mutual-tls usage
+use_mtls: false
+mtls_client_certificate: client_mtls_cert.pem
+
+# trusted CA certificate path
+ca_certificate_path: ca_cert.pem
+
+server_hostname: 127.0.0.1

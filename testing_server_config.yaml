@@ -1,0 +1,19 @@
+# protocol
+port: 8374
+recv_buffer_size: 128000
+
+# mutual-tls usage
+use_mtls: false
+mtls_trusted_ca_certificate_path: mtls_ca_cert.pem
+
+# tls certificates to load as own
+certificate_key_path: tests/certs/server_certificate_key.pem
+certificate_path: tests/certs/server_certificate.pem
+
+# communication moddefualt_server_settingsels to be supported by the server at runtime
+supported_models:
+  sc_model: true
+  rbg_model: false
+  ubg_model: false
+
+# settings for each model

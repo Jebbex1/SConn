@@ -1,0 +1,20 @@
+# protocol
+port: 8374
+recv_buffer_size: 128000
+# post_handshake_length_field_size: 28  # limits all packets after the handshake to a size of 2**28 bytes
+
+# mutual-tls usage
+use_mtls: false
+mtls_trusted_ca_certificate_path: mtls_ca_cert.pem
+
+# tls certificates to load as own
+certificate_key_path: server_certificate_key.pem
+certificate_path: server_certificate.pem
+
+# communication models to be supported by the server at runtime
+supported_models:
+  sc_model: false
+  rbg_model: false
+  ubg_model: false
+
+# settings for each model
