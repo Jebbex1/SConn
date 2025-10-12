@@ -3,7 +3,7 @@ port: 8374
 recv_buffer_size: 128000
 
 # mutual-tls usage
-use_mtls: false
+use_mtls: true
 mtls_certificate_path: tests/certs/client/client-cert.pem
 mtls_certificate_key_path: tests/certs/client/client-cert-key.pem
 

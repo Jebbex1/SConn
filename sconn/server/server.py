@@ -3,7 +3,7 @@ from multiprocessing import Process
 from threading import Thread
 from os.path import exists
 from functools import partial
-from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_SERVER
+from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_SERVER, Purpose, create_default_context
 from ..utils.config_interface import ServerConfig
 from ..protocol.constants import ConnectionModels
 from ..protocol.transmission import recv_packet, send_packet
@@ -13,7 +13,11 @@ from ..utils.connection_utils import safe_disconnect
 
 
 def tls_wrap_client_connection(client_socket: socket, config: ServerConfig) -> SSLSocket:
-    tls_context = SSLContext(PROTOCOL_TLS_SERVER)
+    if config.use_mtls():
+        tls_context = create_default_context(Purpose.CLIENT_AUTH)
+        tls_context.load_verify_locations(config.get_mtls_ca_certificate_path())
+    else:
+        tls_context = SSLContext(PROTOCOL_TLS_SERVER)
     certfile_path, keyfile_path = config.get_tls_certificate_paths()
     tls_context.load_cert_chain(certfile=certfile_path, 
                                 keyfile =keyfile_path)

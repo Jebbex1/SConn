@@ -73,6 +73,9 @@ class ClientConfig(BaseConfig):
         super().__init__(config_file_path, False)
         ClientConfig.validate_client_config_file(self.config_yaml)
         
+    def get_mtls_certificate_paths(self) -> tuple[str, str]:
+        return self.config_yaml["mtls_certificate_path"], self.config_yaml["mtls_certificate_key_path"]
+        
     def get_server_hostname(self) -> str:
         return self.config_yaml["server_hostname"]
     

@@ -11,6 +11,10 @@ from ssl import SSLSocket, TLSVersion, SSLContext, PROTOCOL_TLS_CLIENT
 
 def tls_wrap_connection(skt: socket, config: ClientConfig) -> SSLSocket:
     tls_context = SSLContext(PROTOCOL_TLS_CLIENT)
+    if config.use_mtls():
+        certfile_path, keyfile_path = config.get_mtls_certificate_paths()
+        tls_context.load_cert_chain(certfile=certfile_path, 
+                                    keyfile =keyfile_path)    
     tls_context.load_verify_locations(config.get_ca_certificate_path())
     tls_context.minimum_version = TLSVersion.TLSv1_3
     return tls_context.wrap_socket(skt, server_hostname=config.get_server_hostname())
