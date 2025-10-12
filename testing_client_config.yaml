@@ -8,6 +8,7 @@ mtls_certificate_path: tests/certs/client/client-cert.pem
 mtls_certificate_key_path: tests/certs/client/client-cert-key.pem
 
 # trusted CA certificate path
-ca_certificate_path: tests/certs/normal_ca/normal-ca.pem
+trusted_ca_certificate_paths_list: 
+  - tests/certs/normal_ca/normal-ca.pem
 
 server_hostname: 127.0.0.1

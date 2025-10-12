@@ -5,7 +5,8 @@ recv_buffer_size: 128000
 
 # mutual-tls usage
 use_mtls: false
-mtls_trusted_ca_certificate_path: mtls_ca_cert.pem
+mtls_trusted_ca_certificate_paths_list:
+  - mtls_ca_cert.pem
 
 # tls certificates to load as own
 certificate_key_path: server_certificate_key.pem

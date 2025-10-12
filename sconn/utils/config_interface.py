@@ -50,8 +50,8 @@ class ServerConfig(BaseConfig):
     def get_tls_certificate_paths(self) -> tuple[str, str]:
         return self.config_yaml["certificate_path"], self.config_yaml["certificate_key_path"]
 
-    def get_mtls_ca_certificate_path(self) -> str:
-        return self.config_yaml["mtls_trusted_ca_certificate_path"]
+    def get_trusted_mtls_ca_certificate_paths(self) -> str:
+        return self.config_yaml["mtls_trusted_ca_certificate_paths_list"]
     
     def supports_sc_model(self) -> bool:
         return self.config_yaml["supported_models"]["sc_model"]
@@ -79,8 +79,8 @@ class ClientConfig(BaseConfig):
     def get_server_hostname(self) -> str:
         return self.config_yaml["server_hostname"]
     
-    def get_ca_certificate_path(self) -> str:
-        return self.config_yaml["ca_certificate_path"]
+    def get_trusted_ca_certificate_paths(self) -> str:
+        return self.config_yaml["trusted_ca_certificate_paths_list"]
     
     def get_mtls_certificate_path(self) -> str:
         return self.config_yaml["mtls_client_certificate"]

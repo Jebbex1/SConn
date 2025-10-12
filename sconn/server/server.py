@@ -15,7 +15,8 @@ from ..utils.connection_utils import safe_disconnect
 def tls_wrap_client_connection(client_socket: socket, config: ServerConfig) -> SSLSocket:
     if config.use_mtls():
         tls_context = create_default_context(Purpose.CLIENT_AUTH)
-        tls_context.load_verify_locations(config.get_mtls_ca_certificate_path())
+        for trusted_ca_cert_path in config.get_trusted_mtls_ca_certificate_paths():
+            tls_context.load_verify_locations(trusted_ca_cert_path)
     else:
         tls_context = SSLContext(PROTOCOL_TLS_SERVER)
     certfile_path, keyfile_path = config.get_tls_certificate_paths()

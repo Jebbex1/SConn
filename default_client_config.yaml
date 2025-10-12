@@ -8,6 +8,7 @@ mtls_certificate_path: client_mtls_cert.pem
 mtls_certificate_key_path: client_mtls_cert_key.pem
 
 # trusted CA certificate path
-ca_certificate_path: ca_cert.pem
+trusted_ca_certificate_paths_list:
+  - ca_cert.pem
 
 server_hostname: 127.0.0.1
